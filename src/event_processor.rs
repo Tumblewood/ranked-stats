@@ -112,6 +112,9 @@ pub fn process_ranked_match<C: StatConfig>(
 
     // Only return results for valid 4v4 matches
     if red_team.len() == 4 && blue_team.len() == 4 {
+        // Post-process stats for complex calculations
+        C::post_process_stats(&relevant_events, &mut player_stats, &red_team, &blue_team);
+        
         // Extract player names
         let player_names: Vec<String> = match_log.players.iter()
             .map(|p| p.name.clone())

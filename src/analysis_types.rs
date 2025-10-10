@@ -38,6 +38,15 @@ pub trait StatConfig {
         all_player_stats: &mut [Self::Stats],
     );
     
+    fn post_process_stats(
+        _all_events: &[RelevantEvent],
+        _all_player_stats: &mut [Self::Stats],
+        _red_team: &[usize],
+        _blue_team: &[usize],
+    ) {
+        // Default implementation does nothing
+    }
+    
     fn to_csv_values(stats: &Self::Stats) -> Vec<String>;
     
     fn generate_csv_header() -> String {
