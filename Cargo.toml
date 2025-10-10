@@ -1,5 +1,5 @@
 [package]
-name = "tagpro-eu-analysis"
+name = "ranked-stats"
 version = "0.1.0"
 authors = ["Tumblewood"]
 edition = "2024"

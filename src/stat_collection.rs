@@ -18,10 +18,10 @@ const CSV_HEADER_RANKED_WITHOUT_STATS: &str = "timestamp,map,duration,red,blue,r
 const CSV_HEADER_RANKED_WITH_STATS: &str = "timestamp,map,duration,diff,r1,r2,r3,r4,b1,b2,b3,b4,r1_caps,r1_hold,r1_returns,r1_prevent,r1_ndps,r1_pups,r2_caps,r2_hold,r2_returns,r2_prevent,r2_ndps,r2_pups,r3_caps,r3_hold,r3_returns,r3_prevent,r3_ndps,r3_pups,r4_caps,r4_hold,r4_returns,r4_prevent,r4_ndps,r4_pups,b1_caps,b1_hold,b1_returns,b1_prevent,b1_ndps,b1_pups,b2_caps,b2_hold,b2_returns,b2_prevent,b2_ndps,b2_pups,b3_caps,b3_hold,b3_returns,b3_prevent,b3_ndps,b3_pups,b4_caps,b4_hold,b4_returns,b4_prevent,b4_ndps,b4_pups";
 const OUTPUT_PATH_WITHOUT_STATS: &str = "ratings/matchups.csv";
 const OUTPUT_PATH_WITH_STATS: &str = "ratings/matchups_with_stats.csv";
-const OUTPUT_PATH_PUP_TIMES: &str = "ranked/pup_times.csv";
-const OUTPUT_PATH_CAP_TIMES: &str = "ranked/cap_times.csv";
-const OUTPUT_PATH_RANKED_WITHOUT_STATS: &str = "ranked/matchups.csv";
-const OUTPUT_PATH_RANKED_WITH_STATS: &str = "ranked/matchups_with_stats.csv";
+const OUTPUT_PATH_PUP_TIMES: &str = "analysis/pup_times.csv";
+const OUTPUT_PATH_CAP_TIMES: &str = "analysis/cap_times.csv";
+const OUTPUT_PATH_RANKED_WITHOUT_STATS: &str = "analysis/matchups.csv";
+const OUTPUT_PATH_RANKED_WITH_STATS: &str = "analysis/matchups_with_stats.csv";
 
 struct RelevantEvent {
     time: usize,
@@ -839,6 +839,7 @@ fn write_matchup_with_stats(
         ).as_ref()
     ).expect("Could not print matchup to file.");
 }
+
 
 // Write matchup data, including player stats, to the output file.
 // date, map_id, duration, cap_diff, then all player names, then all their stats
