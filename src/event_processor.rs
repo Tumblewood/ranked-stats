@@ -64,6 +64,11 @@ pub fn process_ranked_match<C: StatConfig>(
     // Process events in chronological order
     let mut cap_diff: isize = 0;
     let mut garbage_time_cap_diff: isize = 0;
+    let mut red_fc: Option<usize> = None;
+    let mut blue_fc: Option<usize> = None;
+    let mut red_grab_time: Option<usize> = None;
+    let mut blue_grab_time: Option<usize> = None;
+    
     for event in relevant_events.iter() {
         // Handle team changes from Join/Quit events first
         match event.event_type {
@@ -93,11 +98,15 @@ pub fn process_ranked_match<C: StatConfig>(
         
         // Process the event using the config
         C::process_event(
-            &mut player_stats[event.player_index],
             event,
             &mut cap_diff,
             &mut garbage_time_cap_diff,
             match_log.duration,
+            &mut red_fc,
+            &mut blue_fc,
+            &mut red_grab_time,
+            &mut blue_grab_time,
+            &mut player_stats,
         );
     }
 

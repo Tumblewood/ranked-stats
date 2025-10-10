@@ -27,11 +27,15 @@ pub trait StatConfig {
     const STAT_FIELDS: &'static [&'static str];
     
     fn process_event(
-        stats: &mut Self::Stats,
         event: &RelevantEvent,
         cap_diff: &mut isize,
         garbage_time_cap_diff: &mut isize,
         match_duration: usize,
+        red_fc: &mut Option<usize>,
+        blue_fc: &mut Option<usize>,
+        red_grab_time: &mut Option<usize>,
+        blue_grab_time: &mut Option<usize>,
+        all_player_stats: &mut [Self::Stats],
     );
     
     fn to_csv_values(stats: &Self::Stats) -> Vec<String>;

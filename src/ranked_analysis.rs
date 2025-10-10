@@ -14,6 +14,7 @@ pub struct RankedPlayerStats {
     pub quick_returns: usize,
     pub nrts: usize,
     pub pups: usize,
+    pub hwoh: usize,
 }
 
 pub struct RankedStatConfig;
@@ -34,16 +35,21 @@ impl StatConfig for RankedStatConfig {
     ];
     
     const STAT_FIELDS: &'static [&'static str] = &[
-        "caps", "garbage_time_caps", "hold", "ndps", "returns", "quick_returns", "nrts", "pups"
+        "caps", "garbage_time_caps", "hold", "ndps", "returns", "quick_returns", "nrts", "pups", "hwoh"
     ];
     
     fn process_event(
-        stats: &mut Self::Stats,
         event: &RelevantEvent,
         cap_diff: &mut isize,
         garbage_time_cap_diff: &mut isize,
-        match_duration: usize,
+        _match_duration: usize,
+        red_fc: &mut Option<usize>,
+        blue_fc: &mut Option<usize>,
+        red_grab_time: &mut Option<usize>,
+        blue_grab_time: &mut Option<usize>,
+        all_player_stats: &mut [Self::Stats],
     ) {
+        let stats = &mut all_player_stats[event.player_index];
         match event.event_type {
             Event::Capture => {
                 // Check if this is garbage time based on the original logic
@@ -70,9 +76,57 @@ impl StatConfig for RankedStatConfig {
                 }
                 stats.caps += 1;
                 stats.hold_start = None; // Cap ends hold
+                
+                // Handle hwoh calculation on capture (similar to drop)
+                match event.team {
+                    Team::Red => {
+                        // If both teams have flags, calculate hwoh
+                        if let (Some(red_grab), Some(blue_grab)) = (*red_grab_time, *blue_grab_time) {
+                            if let (Some(red_fc_idx), Some(blue_fc_idx)) = (*red_fc, *blue_fc) {
+                                let hwoh_start = red_grab.max(blue_grab);
+                                let hwoh_duration = event.time - hwoh_start;
+                                
+                                // Add hwoh time to both flag carriers
+                                all_player_stats[red_fc_idx].hwoh += hwoh_duration;
+                                all_player_stats[blue_fc_idx].hwoh += hwoh_duration;
+                            }
+                        }
+                        *red_fc = None;
+                        *red_grab_time = None;
+                    }
+                    Team::Blue => {
+                        // If both teams have flags, calculate hwoh
+                        if let (Some(red_grab), Some(blue_grab)) = (*red_grab_time, *blue_grab_time) {
+                            if let (Some(red_fc_idx), Some(blue_fc_idx)) = (*red_fc, *blue_fc) {
+                                let hwoh_start = red_grab.max(blue_grab);
+                                let hwoh_duration = event.time - hwoh_start;
+                                
+                                // Add hwoh time to both flag carriers
+                                all_player_stats[red_fc_idx].hwoh += hwoh_duration;
+                                all_player_stats[blue_fc_idx].hwoh += hwoh_duration;
+                            }
+                        }
+                        *blue_fc = None;
+                        *blue_grab_time = None;
+                    }
+                    _ => {}
+                }
             }
             Event::Grab => {
                 stats.hold_start = Some(event.time);
+                
+                // Track flag carrier for hwoh calculation
+                match event.team {
+                    Team::Red => {
+                        *red_fc = Some(event.player_index);
+                        *red_grab_time = Some(event.time);
+                    }
+                    Team::Blue => {
+                        *blue_fc = Some(event.player_index);
+                        *blue_grab_time = Some(event.time);
+                    }
+                    _ => {}
+                }
             }
             Event::Drop => {
                 match stats.hold_start {
@@ -81,6 +135,41 @@ impl StatConfig for RankedStatConfig {
                         stats.hold_start = None;
                     }
                     None => {} // this shouldn't happen
+                }
+                
+                // Handle hwoh calculation on drop
+                match event.team {
+                    Team::Red => {
+                        // If both teams have flags, calculate hwoh
+                        if let (Some(red_grab), Some(blue_grab)) = (*red_grab_time, *blue_grab_time) {
+                            if let (Some(red_fc_idx), Some(blue_fc_idx)) = (*red_fc, *blue_fc) {
+                                let hwoh_start = red_grab.max(blue_grab);
+                                let hwoh_duration = event.time - hwoh_start;
+                                
+                                // Add hwoh time to both flag carriers
+                                all_player_stats[red_fc_idx].hwoh += hwoh_duration;
+                                all_player_stats[blue_fc_idx].hwoh += hwoh_duration;
+                            }
+                        }
+                        *red_fc = None;
+                        *red_grab_time = None;
+                    }
+                    Team::Blue => {
+                        // If both teams have flags, calculate hwoh
+                        if let (Some(red_grab), Some(blue_grab)) = (*red_grab_time, *blue_grab_time) {
+                            if let (Some(red_fc_idx), Some(blue_fc_idx)) = (*red_fc, *blue_fc) {
+                                let hwoh_start = red_grab.max(blue_grab);
+                                let hwoh_duration = event.time - hwoh_start;
+                                
+                                // Add hwoh time to both flag carriers
+                                all_player_stats[red_fc_idx].hwoh += hwoh_duration;
+                                all_player_stats[blue_fc_idx].hwoh += hwoh_duration;
+                            }
+                        }
+                        *blue_fc = None;
+                        *blue_grab_time = None;
+                    }
+                    _ => {}
                 }
             }
             Event::Return => {
@@ -121,6 +210,7 @@ impl StatConfig for RankedStatConfig {
             stats.quick_returns.to_string(),
             stats.nrts.to_string(),
             stats.pups.to_string(),
+            stats.hwoh.to_string(),
         ]
     }
 }
