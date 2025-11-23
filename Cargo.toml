@@ -10,3 +10,11 @@ serde_json = "^1.0"
 num-derive = "^0.4"
 num-traits = "^0.2"
 base64 = "^0.21"
+
+[[bin]]
+name = "ranked-stats"
+path = "src/main.rs"
+
+[[bin]]
+name = "collect-records"
+path = "src/bin/collect_records.rs"
