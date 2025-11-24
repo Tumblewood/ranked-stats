@@ -1,0 +1,295 @@
+=== ALL-TIME RANKED TAGPRO COMBINED GAME RECORDS ===
+
+## FULL GAME RECORDS (Including Overtime)
+
+### HIGHS
+
+#### Tags
+  Match 3990757: 248
+  Match 4032345: 229
+  Match 4039226: 206
+  Match 4042499: 201
+  Match 4054219: 201
+
+#### Returns
+  Match 3990757: 206
+  Match 4032345: 197
+  Match 4040201: 179
+  Match 4042499: 179
+  Match 4054219: 175
+
+#### Hold (seconds)
+  Match 3990757: 2083
+  Match 4032345: 1889
+  Match 4054219: 1731
+  Match 4040201: 1727
+  Match 4013772: 1650
+
+#### Prevent (seconds)
+  Match 3977701: 1244
+  Match 4099482: 1172
+  Match 3944261: 1088
+  Match 3958120: 1071
+  Match 3948709: 1036
+
+#### Quick Returns
+  Match 3957395: 39
+  Match 3945549: 37
+  Match 3945882: 36
+  Match 3950664: 36
+  Match 4056873: 36
+  Match 4117727: 36
+
+#### Non-Tag Pops
+  Match 3993239: 82
+  Match 4126483: 82
+  Match 3975889: 81
+  Match 4040082: 79
+  Match 3950545: 76
+  Match 4037010: 76
+
+
+### LOWS
+
+#### Tags
+  Match 3934981: 11
+  Match 3934742: 18
+  Match 3938954: 19
+  Match 3944510: 20
+  Match 4094242: 20
+
+#### Returns
+  Match 3934981: 9
+  Match 3934742: 13
+  Match 3985603: 14
+  Match 3944510: 15
+  Match 3935007: 18
+  Match 3935921: 18
+  Match 3979942: 18
+  Match 4043482: 18
+  Match 4103451: 18
+  Match 4111134: 18
+
+#### Hold (seconds)
+  Match 4099971: 93
+  Match 3987778: 95
+  Match 3950976: 102
+  Match 4114637: 102
+  Match 3951198: 104
+
+#### Prevent (seconds)
+  Match 4065780: 26
+  Match 3956289: 28
+  Match 3934742: 31
+  Match 3943466: 37
+  Match 3966013: 38
+  Match 4112794: 38
+
+#### Quick Returns
+  Match 3934742: 0
+  Match 3934981: 0
+  Match 3935318: 0
+  Match 3937380: 0
+  Match 3937417: 0
+  Match 3938631: 0
+  Match 3947582: 0
+  Match 3952422: 0
+  Match 3957628: 0
+  Match 3959948: 0
+  Match 3961157: 0
+  Match 3963359: 0
+  Match 3964946: 0
+  Match 3968193: 0
+  Match 3968348: 0
+  Match 3971089: 0
+  Match 3971441: 0
+  Match 3977507: 0
+  Match 3979134: 0
+  Match 3981757: 0
+  Match 3986926: 0
+  Match 3987451: 0
+  Match 3988403: 0
+  Match 3989585: 0
+  Match 3992793: 0
+  Match 3995682: 0
+  Match 3998865: 0
+  Match 4001194: 0
+  Match 4012535: 0
+  Match 4014508: 0
+  Match 4018309: 0
+  Match 4021843: 0
+  Match 4029000: 0
+  Match 4029175: 0
+  Match 4043482: 0
+  Match 4044327: 0
+  Match 4056422: 0
+  Match 4058924: 0
+  Match 4059947: 0
+  Match 4060551: 0
+  Match 4062170: 0
+  Match 4068206: 0
+  Match 4068552: 0
+  Match 4072156: 0
+  Match 4084989: 0
+  Match 4086870: 0
+  Match 4088279: 0
+  Match 4091870: 0
+  Match 4098636: 0
+  Match 4101011: 0
+  Match 4103554: 0
+  Match 4106865: 0
+  Match 4111883: 0
+  Match 4112794: 0
+  Match 4114170: 0
+  Match 4125122: 0
+  Match 4125372: 0
+
+## FIRST 8 MINUTES RECORDS
+
+### HIGHS
+
+#### Tags
+  Match 4035595: 132
+  Match 4020377: 131
+  Match 4022202: 130
+  Match 4028295: 130
+  Match 4068976: 130
+
+#### Returns
+  Match 3946448: 117
+  Match 4122477: 111
+  Match 3962986: 108
+  Match 4029299: 108
+  Match 3972427: 107
+  Match 3985935: 107
+  Match 4074433: 107
+
+#### Hold (seconds)
+  Match 3954789: 867
+  Match 4050712: 863
+  Match 3997557: 858
+  Match 3946448: 845
+  Match 4117914: 838
+
+#### Prevent (seconds)
+  Match 3941304: 914
+  Match 3963411: 909
+  Match 4009919: 882
+  Match 3942727: 861
+  Match 4063799: 861
+
+#### Quick Returns
+  Match 3945549: 37
+  Match 4056873: 36
+  Match 4117727: 36
+  Match 3995909: 35
+  Match 4075639: 35
+  Match 4126316: 35
+
+#### Non-Tag Pops
+  Match 3978934: 67
+  Match 3939779: 66
+  Match 3978305: 65
+  Match 3953735: 64
+  Match 3974675: 64
+
+
+### LOWS
+
+#### Tags
+  Match 3934981: 11
+  Match 3934742: 18
+  Match 3938954: 19
+  Match 3944510: 20
+  Match 4094242: 20
+
+#### Returns
+  Match 3934981: 9
+  Match 3934742: 13
+  Match 3985603: 14
+  Match 3944510: 15
+  Match 3935007: 18
+  Match 3935921: 18
+  Match 3979942: 18
+  Match 4043482: 18
+  Match 4103451: 18
+  Match 4111134: 18
+
+#### Hold (seconds)
+  Match 4099971: 93
+  Match 3987778: 95
+  Match 3950976: 102
+  Match 4114637: 102
+  Match 3951198: 104
+
+#### Prevent (seconds)
+  Match 4065780: 26
+  Match 3956289: 28
+  Match 3934742: 31
+  Match 3943466: 37
+  Match 4050712: 37
+
+#### Quick Returns
+  Match 3934742: 0
+  Match 3934981: 0
+  Match 3935318: 0
+  Match 3937380: 0
+  Match 3937417: 0
+  Match 3938631: 0
+  Match 3943552: 0
+  Match 3947582: 0
+  Match 3952422: 0
+  Match 3954789: 0
+  Match 3957628: 0
+  Match 3959948: 0
+  Match 3961157: 0
+  Match 3963359: 0
+  Match 3964946: 0
+  Match 3968193: 0
+  Match 3968348: 0
+  Match 3971089: 0
+  Match 3971441: 0
+  Match 3977507: 0
+  Match 3979134: 0
+  Match 3981757: 0
+  Match 3986926: 0
+  Match 3987451: 0
+  Match 3988403: 0
+  Match 3989585: 0
+  Match 3992793: 0
+  Match 3995682: 0
+  Match 3998865: 0
+  Match 4001194: 0
+  Match 4012535: 0
+  Match 4014508: 0
+  Match 4018309: 0
+  Match 4021843: 0
+  Match 4029000: 0
+  Match 4029175: 0
+  Match 4032442: 0
+  Match 4043482: 0
+  Match 4044327: 0
+  Match 4056422: 0
+  Match 4058924: 0
+  Match 4059947: 0
+  Match 4060551: 0
+  Match 4062170: 0
+  Match 4068206: 0
+  Match 4068552: 0
+  Match 4072156: 0
+  Match 4084989: 0
+  Match 4086870: 0
+  Match 4088279: 0
+  Match 4091870: 0
+  Match 4098636: 0
+  Match 4101011: 0
+  Match 4103554: 0
+  Match 4106865: 0
+  Match 4111883: 0
+  Match 4112092: 0
+  Match 4112794: 0
+  Match 4114170: 0
+  Match 4114174: 0
+  Match 4125122: 0
+  Match 4125372: 0
+

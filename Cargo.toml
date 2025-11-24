@@ -18,3 +18,11 @@ path = "src/main.rs"
 [[bin]]
 name = "collect-records"
 path = "src/bin/collect_records.rs"
+
+[[bin]]
+name = "collect-player-records"
+path = "src/bin/collect_player_records.rs"
+
+[[bin]]
+name = "collect-team-records"
+path = "src/bin/collect_team_records.rs"
