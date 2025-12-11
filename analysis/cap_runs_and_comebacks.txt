@@ -1,0 +1,92 @@
+=== CAP RUNS, COMEBACKS, AND SHORTEST GAMES ===
+
+## FASTEST CAP RUNS
+
+(Runs where at least one opponent was missing are excluded)
+
+### Fastest 2-Cap Run
+  Match 3941668: 0 seconds - Deez Cashews, Light, Sphero Agnew, tbiol
+  Match 3981332: 3 seconds - Marijuana, Phil Ballins, jkxs, umad
+  Match 4040954: 3 seconds - Champagne, Dayman, TheBob18, havok
+  Match 4084849: 3 seconds - AJ., HELEN KELLER, OuchMyBalls, Sambal 1
+  Match 4087061: 3 seconds - Old Cob, PenFifteen, Rudey, kutrebar
+
+### Fastest 3-Cap Run
+  Match 4045485: 8 seconds - Old Cob, aaron, mc, t h C
+  Match 4083433: 9 seconds - CT Crunch, Cheezedoodle, StaIin, danp
+  Match 3944928: 9 seconds - Borgus, anduin, anti-re, bubblez
+  Match 4096650: 10 seconds - HammerTime, No one, PuyoPuyo, oatz_mgoatz
+  Match 3955052: 10 seconds - Enervate, Sadness, SluffAndRuff, frieren
+
+### Fastest 4-Cap Run
+  Match 3964940: 16 seconds - Rabz, Salmond Milk, TheBadBall, thierryonre
+  Match 4039394: 16 seconds - Wilma, fender, skibbity, trippi
+  Match 3975758: 18 seconds - Old Cob, metalhead, umad, whateveritis
+  Match 4002306: 18 seconds - Taurus, TheYoungWolf, anom, jkxs
+  Match 4054932: 19 seconds - BadTrash, Horizon, Yo YoYo, whiff
+
+### Fastest 5-Cap Run
+  Match 4002373: 31 seconds - Ceremony, Hjalpa, JSwan, grunt
+  Match 3981793: 31 seconds - LewBird, LilB:BallGod, TERROR NUGS, my fault
+  Match 4052122: 35 seconds - BadTrash, Rexer, Terry, jl
+  Match 3952594: 35 seconds - I <3 Emacs, JimBobCooter, Ragnar, Schweddys
+  Match 4002528: 37 seconds - Bow Down, alchemist, poobie, tbiol
+
+
+## LATEST COMEBACKS
+
+(Comebacks where opponents were missing are excluded)
+
+### 2-Cap Comebacks (In a Win)
+  Match 4108526: 7:54 - KALX, PenFifteen, Taddy Mason, Zig!
+  Match 3968179: 7:51 - Enervate, FreeFalastin, gl hf :), joy.
+  Match 3964533: 7:51 - A Straw Hat, T_Y, ish, rolf
+  Match 4063419: 7:50 - Gvendolino, Marijuana, boogie, megapoop22
+  Match 4010806: 7:50 - Sambal 1, Shikari, Taurus, Wilma
+
+### 2-Cap Comebacks (In a Loss)
+  Match 4003681: 7:48 - Marijuana, Optical Juke, Wraith, sun chips
+  Match 3944827: 7:43 - EpicBlob, Junoon, Tinderfella, okthen
+  Match 4123704: 7:41 - AJ., Button, Kep, LogisticMap
+  Match 3962769: 7:39 - Chritt, DT, bronny james, joy.
+  Match 3943543: 7:36 - NEUhusky, hail santa, sieh, tnevlos
+
+### 3-Cap Comebacks (In a Win)
+  Match 4038945: 7:38 - Dayman, T.Bomballdil, cereballsy, snackpack
+  Match 3967624: 7:34 - CRYCHIC, eee, kmichael, tha king
+  Match 4119503: 7:33 - Homer Jay, MyLittlePony, Taddy Mason, cereballsy
+  Match 4063419: 7:28 - Gvendolino, Marijuana, boogie, megapoop22
+  Match 3953146: 7:28 - Chritt, Eat Tofu, KOB, SluffAndRuff
+
+### 3-Cap Comebacks (In a Loss)
+  Match 4105894: 7:10 - Toidi, laserpig, white, yawn
+  Match 4004063: 7:01 - Butter, Diencash, Spheroid., broseph
+  Match 4049990: 6:55 - Baby_Shark, Mos Def, fl33t, skibbity
+  Match 4129197: 6:48 - Wraith, dodsfall, gingerdg, mex
+  Match 3958934: 6:46 - BallsToYou., rebel fox, tnevlos, xcv
+
+### 4-Cap Comebacks (In a Win)
+  Match 4119503: 7:11 - Homer Jay, MyLittlePony, Taddy Mason, cereballsy
+  Match 4011705: 7:01 - Bow Down, TheNerve, metalhead, shirt
+  Match 4063419: 6:54 - Gvendolino, Marijuana, boogie, megapoop22
+  Match 3964533: 6:50 - A Straw Hat, T_Y, ish, rolf
+  Match 3980990: 6:25 - Anti_Social, Armbranch, Tyler Durden, clew3
+
+### 4-Cap Comebacks (In a Loss)
+  Match 3964271: 6:35 - Green, Wilma, note, wallsquirrel
+  Match 3984743: 5:20 - Jer32, Toidi, o3, skibbity
+  Match 4121846: 5:18 - Homie, anduin, may_hem, xcv
+  Match 3995005: 5:15 - PASSTHEFLAG, lizzey, popsic, skibbity
+  Match 3988982: 5:12 - Green, Jer32, SoulCake, Spheroid.
+
+
+## SHORTEST GAMES (Full Participation)
+
+(All 8 players present from start to finish)
+
+  Match 3965090: 0:15
+  Match 4100413: 0:15
+  Match 3980008: 0:35
+  Match 3973407: 0:35
+  Match 3959958: 0:35
+
