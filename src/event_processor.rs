@@ -6,6 +6,7 @@ use num_traits::FromPrimitive;
 const MINIMUM_RANKED_MATCH_LENGTH: usize = 180 * 60;
 
 pub fn process_ranked_match<C: StatConfig>(
+    match_id: String,
     match_log: &MatchLog,
 ) -> Option<(MatchResult<C::Stats>, Vec<String>)> {
     // Filter matches like the original code
@@ -121,6 +122,7 @@ pub fn process_ranked_match<C: StatConfig>(
             .collect();
             
         let result = MatchResult {
+            match_id,
             timestamp: match_log.date,
             map_id: match_log.map_id,
             duration: match_log.duration,

@@ -17,8 +17,8 @@ pub fn get_ranked_matchups(match_iterator: MatchIterator) {
     let header = RankedStatConfig::generate_csv_header();
     output_file.write_all(header.as_bytes()).expect("Could not write header to file.");
 
-    for (_match_id, match_log) in match_iterator {
-        if let Some((result, player_names)) = process_ranked_match::<RankedStatConfig>(&match_log) {
+    for (match_id, match_log) in match_iterator {
+        if let Some((result, player_names)) = process_ranked_match::<RankedStatConfig>(match_id, &match_log) {
             // Convert result to CSV row
             let csv_row = format!("\n{}", result.to_csv_row::<RankedStatConfig>(&player_names));
             output_file.write_all(csv_row.as_bytes()).expect("Could not write matchup to file.");

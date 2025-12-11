@@ -26,3 +26,7 @@ path = "src/bin/collect_player_records.rs"
 [[bin]]
 name = "collect-team-records"
 path = "src/bin/collect_team_records.rs"
+
+[[bin]]
+name = "collect-cap-runs-and-comebacks"
+path = "src/bin/collect_cap_runs_and_comebacks.rs"

@@ -1393,3 +1393,746 @@ pub fn collect_combined_game_records(match_iterator: MatchIterator) {
     collector.generate_report("analysis/combined_game_records.txt");
     println!("Combined game records collected! Output written to analysis/combined_game_records.txt");
 }
+
+// Cap Runs and Comebacks Tracking
+
+#[derive(Default)]
+struct CapRunsLeaderboards {
+    fastest_2cap: BTreeMap<usize, Vec<(String, Vec<String>)>>, // time in ticks -> (match_id, team_players)
+    fastest_3cap: BTreeMap<usize, Vec<(String, Vec<String>)>>,
+    fastest_4cap: BTreeMap<usize, Vec<(String, Vec<String>)>>,
+    fastest_5cap: BTreeMap<usize, Vec<(String, Vec<String>)>>,
+}
+
+#[derive(Default)]
+struct ComebackLeaderboards {
+    latest_2cap_comeback_win: BTreeMap<usize, Vec<(String, Vec<String>)>>, // time in ticks -> (match_id, team_players)
+    latest_2cap_comeback_loss: BTreeMap<usize, Vec<(String, Vec<String>)>>,
+    latest_3cap_comeback_win: BTreeMap<usize, Vec<(String, Vec<String>)>>,
+    latest_3cap_comeback_loss: BTreeMap<usize, Vec<(String, Vec<String>)>>,
+    latest_4cap_comeback_win: BTreeMap<usize, Vec<(String, Vec<String>)>>,
+    latest_4cap_comeback_loss: BTreeMap<usize, Vec<(String, Vec<String>)>>,
+}
+
+#[derive(Default)]
+struct ShortestGameLeaderboard {
+    games: BTreeMap<usize, Vec<String>>, // duration in ticks -> match_ids
+}
+
+pub struct CapRunsAndComebacksCollector {
+    cap_runs: CapRunsLeaderboards,
+    comebacks: ComebackLeaderboards,
+    shortest_games: ShortestGameLeaderboard,
+}
+
+impl CapRunsAndComebacksCollector {
+    pub fn new() -> Self {
+        Self {
+            cap_runs: CapRunsLeaderboards::default(),
+            comebacks: ComebackLeaderboards::default(),
+            shortest_games: ShortestGameLeaderboard::default(),
+        }
+    }
+
+    fn insert_cap_run_record(
+        board: &mut BTreeMap<usize, Vec<(String, Vec<String>)>>,
+        duration: usize,
+        match_id: String,
+        team_players: Vec<String>,
+    ) {
+        board
+            .entry(duration)
+            .or_insert_with(Vec::new)
+            .push((match_id, team_players));
+    }
+
+    fn insert_comeback_record(
+        board: &mut BTreeMap<usize, Vec<(String, Vec<String>)>>,
+        time: usize,
+        match_id: String,
+        team_players: Vec<String>,
+    ) {
+        board
+            .entry(time)
+            .or_insert_with(Vec::new)
+            .push((match_id, team_players));
+    }
+
+    fn get_team_players(&self, match_log: &MatchLog, team: Team) -> Vec<String> {
+        let mut players = Vec::new();
+        for player in &match_log.players {
+            // Find the player's Join event to determine their actual team
+            let player_events = EventsReader::new(player.events.clone())
+                .player_events(
+                    Team::from_usize(player.team).expect("Could not parse Team enum."),
+                    match_log.duration,
+                );
+
+            let player_team = player_events
+                .iter()
+                .find(|e| e.event_type == Event::Join)
+                .map(|e| e.team)
+                .unwrap_or(Team::from_usize(player.team).expect("Could not parse Team enum."));
+
+            if player_team == team {
+                players.push(player.name.clone());
+            }
+        }
+        players.sort();
+        players
+    }
+
+    fn all_opponents_present(
+        &self,
+        match_log: &MatchLog,
+        team: Team,
+        start_time: usize,
+        _end_time: usize,
+    ) -> bool {
+        let opponent_team = match team {
+            Team::Red => Team::Blue,
+            Team::Blue => Team::Red,
+            Team::None => return false, // Invalid team
+        };
+
+        let mut opponent_count = 0;
+        for player in &match_log.players {
+            let player_events = EventsReader::new(player.events.clone())
+                .player_events(
+                    Team::from_usize(player.team).expect("Could not parse Team enum."),
+                    match_log.duration,
+                );
+
+            let player_team = player_events
+                .iter()
+                .find(|e| e.event_type == Event::Join)
+                .map(|e| e.team)
+                .unwrap_or(Team::from_usize(player.team).expect("Could not parse Team enum."));
+
+            if player_team == opponent_team {
+                // Check if player was present during [start_time, end_time]
+                let join_time = player_events
+                    .iter()
+                    .find(|e| e.event_type == Event::Join)
+                    .map(|e| e.time)
+                    .unwrap_or(0);
+
+                // Player must have joined before the run started
+                if join_time <= start_time {
+                    opponent_count += 1;
+                }
+            }
+        }
+
+        // There should be exactly 4 opponents
+        opponent_count == 4
+    }
+
+    fn all_players_present_whole_game(&self, match_log: &MatchLog) -> bool {
+        if match_log.players.len() != 8 {
+            return false;
+        }
+
+        for player in &match_log.players {
+            // Must pass Team::None to player_events() so it can detect Quit events
+            let player_events = EventsReader::new(player.events.clone())
+                .player_events(
+                    Team::None,
+                    match_log.duration,
+                );
+
+            // Check if player disconnected BEFORE the game ended (early quit)
+            // Allow quits at the very end when the game finishes
+            if let Some(quit_event) = player_events.iter().find(|e| e.event_type == Event::Quit) {
+                // If quit happened more than 2 seconds before game ended, they left early
+                if quit_event.time < match_log.duration.saturating_sub(120) {
+                    return false;
+                }
+            }
+        }
+
+        true
+    }
+
+    pub fn process_match(&mut self, match_id: String, match_log: &MatchLog) {
+        // Filter matches - use same criteria as other record collection
+        if !match_log.official
+            || match_log.players.len() < 8
+            || match_log.group != Some("".to_string())
+            || match_log.time_limit != 8.0
+        {
+            return;
+        }
+
+        // Collect all capture events (excluding flagless caps)
+        let mut captures: Vec<(usize, Team)> = Vec::new();
+
+        // Track flag possession by team (not by individual player)
+        let mut red_has_flag = false;
+        let mut blue_has_flag = false;
+
+        // Collect all events from all players into a unified timeline
+        #[derive(Clone)]
+        struct TimedTeamEvent {
+            time: usize,
+            event_type: Event,
+            team: Team,
+        }
+
+        let mut all_events = Vec::new();
+
+        for player in &match_log.players {
+            let player_events = EventsReader::new(player.events.clone())
+                .player_events(
+                    Team::from_usize(player.team).expect("Could not parse Team enum."),
+                    match_log.duration,
+                );
+
+            let player_team = player_events
+                .iter()
+                .find(|e| e.event_type == Event::Join)
+                .map(|e| e.team)
+                .unwrap_or(Team::from_usize(player.team).expect("Could not parse Team enum."));
+
+            for event in player_events.iter() {
+                all_events.push(TimedTeamEvent {
+                    time: event.time,
+                    event_type: event.event_type,
+                    team: player_team,
+                });
+            }
+        }
+
+        // Sort all events by time
+        all_events.sort_by_key(|e| e.time);
+
+        // Process events in chronological order to track flag state by team
+        for event in all_events.iter() {
+            match event.event_type {
+                Event::Grab => {
+                    if event.team == Team::Red {
+                        red_has_flag = true;
+                    } else if event.team == Team::Blue {
+                        blue_has_flag = true;
+                    }
+                }
+                Event::Capture => {
+                    // Only count captures where the team had the flag
+                    if event.team == Team::Red && red_has_flag {
+                        captures.push((event.time, Team::Red));
+                    } else if event.team == Team::Blue && blue_has_flag {
+                        captures.push((event.time, Team::Blue));
+                    }
+
+                    // Reset flag state for the team that capped
+                    if event.team == Team::Red {
+                        red_has_flag = false;
+                    } else if event.team == Team::Blue {
+                        blue_has_flag = false;
+                    }
+                }
+                Event::Drop | Event::Pop => {
+                    if event.team == Team::Red {
+                        red_has_flag = false;
+                    } else if event.team == Team::Blue {
+                        blue_has_flag = false;
+                    }
+                }
+                _ => {}
+            }
+        }
+
+        // Process cap runs and comebacks only if game meets duration requirement
+        if match_log.duration >= MINIMUM_RECORD_MATCH_LENGTH {
+            // Process cap runs
+            self.process_cap_runs(&match_id, match_log, &captures);
+
+            // Process comebacks
+            self.process_comebacks(&match_id, match_log, &captures);
+        }
+
+        // Process shortest full-participation game (no duration minimum)
+        if self.all_players_present_whole_game(match_log) {
+            self.shortest_games
+                .games
+                .entry(match_log.duration)
+                .or_insert_with(Vec::new)
+                .push(match_id.clone());
+        }
+    }
+
+    fn process_cap_runs(
+        &mut self,
+        match_id: &str,
+        match_log: &MatchLog,
+        captures: &[(usize, Team)],
+    ) {
+        if captures.is_empty() {
+            return;
+        }
+
+        let mut i = 0;
+        while i < captures.len() {
+            let (run_start_time, run_team) = captures[i];
+            let mut run_length = 1;
+            let mut j = i + 1;
+
+            // Find consecutive caps by the same team
+            while j < captures.len() && captures[j].1 == run_team {
+                run_length += 1;
+                j += 1;
+            }
+
+            // Check if we have runs worth recording (2+ caps)
+            if run_length >= 2 {
+                let run_end_time = captures[j - 1].0;
+                let run_duration = run_end_time - run_start_time;
+
+                // Verify all opponents were present during the run
+                if !self.all_opponents_present(match_log, run_team, run_start_time, run_end_time) {
+                    i = j;
+                    continue;
+                }
+
+                let team_players = self.get_team_players(match_log, run_team);
+
+                // Record different run lengths
+                if run_length >= 2 {
+                    Self::insert_cap_run_record(
+                        &mut self.cap_runs.fastest_2cap,
+                        run_duration,
+                        match_id.to_string(),
+                        team_players.clone(),
+                    );
+                }
+                if run_length >= 3 {
+                    Self::insert_cap_run_record(
+                        &mut self.cap_runs.fastest_3cap,
+                        run_duration,
+                        match_id.to_string(),
+                        team_players.clone(),
+                    );
+                }
+                if run_length >= 4 {
+                    Self::insert_cap_run_record(
+                        &mut self.cap_runs.fastest_4cap,
+                        run_duration,
+                        match_id.to_string(),
+                        team_players.clone(),
+                    );
+                }
+                if run_length >= 5 {
+                    Self::insert_cap_run_record(
+                        &mut self.cap_runs.fastest_5cap,
+                        run_duration,
+                        match_id.to_string(),
+                        team_players.clone(),
+                    );
+                }
+            }
+
+            i = j;
+        }
+    }
+
+    fn process_comebacks(
+        &mut self,
+        match_id: &str,
+        match_log: &MatchLog,
+        captures: &[(usize, Team)],
+    ) {
+        // Track score over time and find latest comebacks
+        let mut red_score = 0;
+        let mut blue_score = 0;
+
+        // Track latest time each team was down by 2/3/4
+        let mut red_latest_down_2 = None;
+        let mut red_latest_down_3 = None;
+        let mut red_latest_down_4 = None;
+        let mut blue_latest_down_2 = None;
+        let mut blue_latest_down_3 = None;
+        let mut blue_latest_down_4 = None;
+
+        for (time, team) in captures {
+            if *team == Team::Red {
+                red_score += 1;
+            } else {
+                blue_score += 1;
+            }
+
+            let diff = red_score as isize - blue_score as isize;
+
+            // Update latest deficit times
+            if diff == -2 {
+                red_latest_down_2 = Some(*time);
+            } else if diff == -3 {
+                red_latest_down_3 = Some(*time);
+            } else if diff == -4 {
+                red_latest_down_4 = Some(*time);
+            } else if diff == 2 {
+                blue_latest_down_2 = Some(*time);
+            } else if diff == 3 {
+                blue_latest_down_3 = Some(*time);
+            } else if diff == 4 {
+                blue_latest_down_4 = Some(*time);
+            }
+
+            // Check for comebacks when score is tied
+            if diff == 0 {
+                // Check if red came back from deficits
+                if let Some(deficit_time) = red_latest_down_2 {
+                    if self.all_opponents_present(match_log, Team::Red, deficit_time, *time) {
+                        let red_players = self.get_team_players(match_log, Team::Red);
+                        let red_won = red_score > blue_score || (red_score == blue_score && self.team_won(match_log, Team::Red));
+
+                        if red_won {
+                            Self::insert_comeback_record(
+                                &mut self.comebacks.latest_2cap_comeback_win,
+                                deficit_time,
+                                match_id.to_string(),
+                                red_players.clone(),
+                            );
+                        } else {
+                            Self::insert_comeback_record(
+                                &mut self.comebacks.latest_2cap_comeback_loss,
+                                deficit_time,
+                                match_id.to_string(),
+                                red_players.clone(),
+                            );
+                        }
+                    }
+                }
+                if let Some(deficit_time) = red_latest_down_3 {
+                    if self.all_opponents_present(match_log, Team::Red, deficit_time, *time) {
+                        let red_players = self.get_team_players(match_log, Team::Red);
+                        let red_won = self.team_won(match_log, Team::Red);
+
+                        if red_won {
+                            Self::insert_comeback_record(
+                                &mut self.comebacks.latest_3cap_comeback_win,
+                                deficit_time,
+                                match_id.to_string(),
+                                red_players.clone(),
+                            );
+                        } else {
+                            Self::insert_comeback_record(
+                                &mut self.comebacks.latest_3cap_comeback_loss,
+                                deficit_time,
+                                match_id.to_string(),
+                                red_players.clone(),
+                            );
+                        }
+                    }
+                }
+                if let Some(deficit_time) = red_latest_down_4 {
+                    if self.all_opponents_present(match_log, Team::Red, deficit_time, *time) {
+                        let red_players = self.get_team_players(match_log, Team::Red);
+                        let red_won = self.team_won(match_log, Team::Red);
+
+                        if red_won {
+                            Self::insert_comeback_record(
+                                &mut self.comebacks.latest_4cap_comeback_win,
+                                deficit_time,
+                                match_id.to_string(),
+                                red_players.clone(),
+                            );
+                        } else {
+                            Self::insert_comeback_record(
+                                &mut self.comebacks.latest_4cap_comeback_loss,
+                                deficit_time,
+                                match_id.to_string(),
+                                red_players.clone(),
+                            );
+                        }
+                    }
+                }
+
+                // Check if blue came back from deficits
+                if let Some(deficit_time) = blue_latest_down_2 {
+                    if self.all_opponents_present(match_log, Team::Blue, deficit_time, *time) {
+                        let blue_players = self.get_team_players(match_log, Team::Blue);
+                        let blue_won = self.team_won(match_log, Team::Blue);
+
+                        if blue_won {
+                            Self::insert_comeback_record(
+                                &mut self.comebacks.latest_2cap_comeback_win,
+                                deficit_time,
+                                match_id.to_string(),
+                                blue_players.clone(),
+                            );
+                        } else {
+                            Self::insert_comeback_record(
+                                &mut self.comebacks.latest_2cap_comeback_loss,
+                                deficit_time,
+                                match_id.to_string(),
+                                blue_players.clone(),
+                            );
+                        }
+                    }
+                }
+                if let Some(deficit_time) = blue_latest_down_3 {
+                    if self.all_opponents_present(match_log, Team::Blue, deficit_time, *time) {
+                        let blue_players = self.get_team_players(match_log, Team::Blue);
+                        let blue_won = self.team_won(match_log, Team::Blue);
+
+                        if blue_won {
+                            Self::insert_comeback_record(
+                                &mut self.comebacks.latest_3cap_comeback_win,
+                                deficit_time,
+                                match_id.to_string(),
+                                blue_players.clone(),
+                            );
+                        } else {
+                            Self::insert_comeback_record(
+                                &mut self.comebacks.latest_3cap_comeback_loss,
+                                deficit_time,
+                                match_id.to_string(),
+                                blue_players.clone(),
+                            );
+                        }
+                    }
+                }
+                if let Some(deficit_time) = blue_latest_down_4 {
+                    if self.all_opponents_present(match_log, Team::Blue, deficit_time, *time) {
+                        let blue_players = self.get_team_players(match_log, Team::Blue);
+                        let blue_won = self.team_won(match_log, Team::Blue);
+
+                        if blue_won {
+                            Self::insert_comeback_record(
+                                &mut self.comebacks.latest_4cap_comeback_win,
+                                deficit_time,
+                                match_id.to_string(),
+                                blue_players.clone(),
+                            );
+                        } else {
+                            Self::insert_comeback_record(
+                                &mut self.comebacks.latest_4cap_comeback_loss,
+                                deficit_time,
+                                match_id.to_string(),
+                                blue_players.clone(),
+                            );
+                        }
+                    }
+                }
+
+                // Clear all deficit markers after recording to avoid duplicates
+                red_latest_down_2 = None;
+                red_latest_down_3 = None;
+                red_latest_down_4 = None;
+                blue_latest_down_2 = None;
+                blue_latest_down_3 = None;
+                blue_latest_down_4 = None;
+            }
+        }
+    }
+
+    fn team_won(&self, match_log: &MatchLog, team: Team) -> bool {
+        let mut red_caps = 0;
+        let mut blue_caps = 0;
+
+        for player in &match_log.players {
+            let player_events = EventsReader::new(player.events.clone())
+                .player_events(
+                    Team::from_usize(player.team).expect("Could not parse Team enum."),
+                    match_log.duration,
+                );
+
+            let player_team = player_events
+                .iter()
+                .find(|e| e.event_type == Event::Join)
+                .map(|e| e.team)
+                .unwrap_or(Team::from_usize(player.team).expect("Could not parse Team enum."));
+
+            let caps = player_events
+                .iter()
+                .filter(|e| e.event_type == Event::Capture)
+                .count();
+
+            if player_team == Team::Red {
+                red_caps += caps;
+            } else {
+                blue_caps += caps;
+            }
+        }
+
+        match team {
+            Team::Red => red_caps > blue_caps,
+            Team::Blue => blue_caps > red_caps,
+            Team::None => false, // Invalid team can't win
+        }
+    }
+
+    fn get_top_n_cap_runs(
+        map: &BTreeMap<usize, Vec<(String, Vec<String>)>>,
+        n: usize,
+    ) -> Vec<(String, Vec<String>, usize)> {
+        let mut results = Vec::new();
+        for (time, entries) in map.iter() {
+            for (match_id, players) in entries {
+                results.push((match_id.clone(), players.clone(), *time));
+                if results.len() >= n {
+                    return results;
+                }
+            }
+        }
+        results
+    }
+
+    fn get_top_n_comebacks(
+        map: &BTreeMap<usize, Vec<(String, Vec<String>)>>,
+        n: usize,
+    ) -> Vec<(String, Vec<String>, usize)> {
+        let mut results = Vec::new();
+        // For comebacks, we want the LATEST time, so iterate in reverse
+        for (time, entries) in map.iter().rev() {
+            for (match_id, players) in entries {
+                results.push((match_id.clone(), players.clone(), *time));
+                if results.len() >= n {
+                    return results;
+                }
+            }
+        }
+        results
+    }
+
+    fn get_top_n_shortest_games(
+        map: &BTreeMap<usize, Vec<String>>,
+        n: usize,
+    ) -> Vec<(String, usize)> {
+        let mut results = Vec::new();
+        for (duration, match_ids) in map.iter() {
+            for match_id in match_ids {
+                results.push((match_id.clone(), *duration));
+                if results.len() >= n {
+                    return results;
+                }
+            }
+        }
+        results
+    }
+
+    pub fn generate_report(&self, filename: &str) {
+        let mut file = File::create(filename).expect("Could not create file");
+
+        writeln!(file, "=== CAP RUNS, COMEBACKS, AND SHORTEST GAMES ===\n").unwrap();
+
+        // Cap Runs
+        writeln!(file, "## FASTEST CAP RUNS\n").unwrap();
+        writeln!(file, "(Runs where at least one opponent was missing are excluded)\n").unwrap();
+
+        self.write_cap_run_leaderboard(&mut file, "### Fastest 2-Cap Run", &self.cap_runs.fastest_2cap);
+        self.write_cap_run_leaderboard(&mut file, "### Fastest 3-Cap Run", &self.cap_runs.fastest_3cap);
+        self.write_cap_run_leaderboard(&mut file, "### Fastest 4-Cap Run", &self.cap_runs.fastest_4cap);
+        self.write_cap_run_leaderboard(&mut file, "### Fastest 5-Cap Run", &self.cap_runs.fastest_5cap);
+
+        // Comebacks
+        writeln!(file, "\n## LATEST COMEBACKS\n").unwrap();
+        writeln!(file, "(Comebacks where opponents were missing are excluded)\n").unwrap();
+
+        writeln!(file, "### 2-Cap Comebacks (In a Win)").unwrap();
+        self.write_comeback_leaderboard(&mut file, &self.comebacks.latest_2cap_comeback_win);
+        writeln!(file, "### 2-Cap Comebacks (In a Loss)").unwrap();
+        self.write_comeback_leaderboard(&mut file, &self.comebacks.latest_2cap_comeback_loss);
+
+        writeln!(file, "### 3-Cap Comebacks (In a Win)").unwrap();
+        self.write_comeback_leaderboard(&mut file, &self.comebacks.latest_3cap_comeback_win);
+        writeln!(file, "### 3-Cap Comebacks (In a Loss)").unwrap();
+        self.write_comeback_leaderboard(&mut file, &self.comebacks.latest_3cap_comeback_loss);
+
+        writeln!(file, "### 4-Cap Comebacks (In a Win)").unwrap();
+        self.write_comeback_leaderboard(&mut file, &self.comebacks.latest_4cap_comeback_win);
+        writeln!(file, "### 4-Cap Comebacks (In a Loss)").unwrap();
+        self.write_comeback_leaderboard(&mut file, &self.comebacks.latest_4cap_comeback_loss);
+
+        // Shortest games
+        writeln!(file, "\n## SHORTEST GAMES (Full Participation)\n").unwrap();
+        writeln!(file, "(All 8 players present from start to finish)\n").unwrap();
+        self.write_shortest_games(&mut file);
+    }
+
+    fn write_cap_run_leaderboard(
+        &self,
+        file: &mut File,
+        title: &str,
+        map: &BTreeMap<usize, Vec<(String, Vec<String>)>>,
+    ) {
+        writeln!(file, "{}", title).unwrap();
+
+        let results = Self::get_top_n_cap_runs(map, 5);
+
+        if results.is_empty() {
+            writeln!(file, "No records found.\n").unwrap();
+            return;
+        }
+
+        for (match_id, players, duration) in results {
+            let duration_seconds = duration / 60;
+            writeln!(
+                file,
+                "  Match {}: {} seconds - {}",
+                match_id,
+                duration_seconds,
+                players.join(", ")
+            )
+            .unwrap();
+        }
+        writeln!(file).unwrap();
+    }
+
+    fn write_comeback_leaderboard(
+        &self,
+        file: &mut File,
+        map: &BTreeMap<usize, Vec<(String, Vec<String>)>>,
+    ) {
+        let results = Self::get_top_n_comebacks(map, 5);
+
+        if results.is_empty() {
+            writeln!(file, "No records found.\n").unwrap();
+            return;
+        }
+
+        for (match_id, players, time) in results {
+            let time_seconds = time / 60;
+            let minutes = time_seconds / 60;
+            let seconds = time_seconds % 60;
+            writeln!(
+                file,
+                "  Match {}: {}:{:02} - {}",
+                match_id,
+                minutes,
+                seconds,
+                players.join(", ")
+            )
+            .unwrap();
+        }
+        writeln!(file).unwrap();
+    }
+
+    fn write_shortest_games(&self, file: &mut File) {
+        let results = Self::get_top_n_shortest_games(&self.shortest_games.games, 5);
+
+        if results.is_empty() {
+            writeln!(file, "No records found.\n").unwrap();
+            return;
+        }
+
+        for (match_id, duration) in results {
+            let duration_seconds = duration / 60;
+            let minutes = duration_seconds / 60;
+            let seconds = duration_seconds % 60;
+            writeln!(file, "  Match {}: {}:{:02}", match_id, minutes, seconds).unwrap();
+        }
+        writeln!(file).unwrap();
+    }
+}
+
+pub fn collect_cap_runs_and_comebacks(match_iterator: MatchIterator) {
+    let mut collector = CapRunsAndComebacksCollector::new();
+
+    for (match_id, match_log) in match_iterator {
+        collector.process_match(match_id, &match_log);
+    }
+
+    collector.generate_report("analysis/cap_runs_and_comebacks.txt");
+    println!("Cap runs and comebacks collected! Output written to analysis/cap_runs_and_comebacks.txt");
+}

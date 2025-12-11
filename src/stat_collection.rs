@@ -8,7 +8,7 @@ use std::io::Write;
 const TIME_AFTER_JOIN_TO_IGNORE: isize = 10 * 60;
 const MINIMUM_MATCHUP_LENGTH: isize = 31 * 60;
 const RESPAWN_DURATION: isize = 3 * 60;
-const MINIMUM_RANKED_MATCH_LENGTH: usize = 180 * 60;
+const MINIMUM_RANKED_MATCH_LENGTH: usize = 2 * 60 * 60;
 
 const CSV_HEADER_WITHOUT_STATS: &str = "timestamp,map,duration,diff,r1,r2,r3,r4,b1,b2,b3,b4";
 const CSV_HEADER_WITH_STATS: &str = "timestamp,map,duration,diff,r1,r2,r3,r4,b1,b2,b3,b4,r1_caps,r1_hold,r1_returns,r1_ndps,r1_pups,r2_caps,r2_hold,r2_returns,r2_ndps,r2_pups,r3_caps,r3_hold,r3_returns,r3_ndps,r3_pups,r4_caps,r4_hold,r4_returns,r4_ndps,r4_pups,b1_caps,b1_hold,b1_returns,b1_ndps,b1_pups,b2_caps,b2_hold,b2_returns,b2_ndps,b2_pups,b3_caps,b3_hold,b3_returns,b3_ndps,b3_pups,b4_caps,b4_hold,b4_returns,b4_ndps,b4_pups";
@@ -96,7 +96,9 @@ pub fn get_ranked_matchups_with_stats(match_iterator: MatchIterator) {
             match_log.players.len() >= 8 &&
             match_log.group == Some("".to_string()) &&
             match_log.time_limit == 8.0 &&
-            match_log.duration >= MINIMUM_RANKED_MATCH_LENGTH {
+            (match_log.duration >= MINIMUM_RANKED_MATCH_LENGTH ||
+             match_log.teams[0].score - match_log.teams[1].score == 5 ||
+             match_log.teams[1].score - match_log.teams[0].score == 5) {
             let mut relevant_events: Vec<RelevantEvent> = Vec::new();
             let mut player_stats: Vec<PlayerStats> = Vec::new();
             for player in match_log.players.iter() {

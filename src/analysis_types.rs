@@ -10,6 +10,7 @@ pub struct RelevantEvent {
 
 #[derive(Debug, Clone)]
 pub struct MatchResult<S> {
+    pub match_id: String,
     pub timestamp: usize,
     pub map_id: usize,
     pub duration: usize,
@@ -50,7 +51,7 @@ pub trait StatConfig {
     fn to_csv_values(stats: &Self::Stats) -> Vec<String>;
     
     fn generate_csv_header() -> String {
-        let mut header_parts = vec!["match_id", "timestamp", "duration", "cap_diff", "garbage_time_cap_diff"];
+        let mut header_parts = vec!["match_id", "map_id", "timestamp", "duration", "cap_diff", "garbage_time_cap_diff"];
         header_parts.extend(["r1", "r2", "r3", "r4", "b1", "b2", "b3", "b4"]);
         
         let mut stat_parts = Vec::new();
@@ -68,7 +69,8 @@ pub trait StatConfig {
 impl<S> MatchResult<S> {
     pub fn to_csv_row<C: StatConfig<Stats = S>>(&self, player_names: &[String]) -> String {
         let mut cells = vec![
-            "0".to_string(), // match_id placeholder
+            self.match_id.clone(),
+            self.map_id.to_string(),
             self.timestamp.to_string(),
             self.duration.to_string(),
             self.cap_diff.to_string(),
