@@ -3,8 +3,6 @@ use crate::events_reader::{Event, EventsReader, Team};
 use crate::log_reader::MatchLog;
 use num_traits::FromPrimitive;
 
-const MINIMUM_RANKED_MATCH_LENGTH: usize = 180 * 60;
-
 pub fn process_ranked_match<C: StatConfig>(
     match_id: String,
     match_log: &MatchLog,
@@ -14,7 +12,6 @@ pub fn process_ranked_match<C: StatConfig>(
         || match_log.players.len() < 8
         || match_log.group != Some("".to_string())
         || match_log.time_limit != 8.0
-        || match_log.duration < MINIMUM_RANKED_MATCH_LENGTH
     {
         return None;
     }
@@ -85,13 +82,10 @@ pub fn process_ranked_match<C: StatConfig>(
                 }
             }
             Event::Quit => {
-                // Handle early quits - remove from team if they quit too early
-                if event.time < match_log.duration - MINIMUM_RANKED_MATCH_LENGTH {
-                    match event.team {
-                        Team::Red => red_team.retain(|&x| x != event.player_index),
-                        Team::Blue => blue_team.retain(|&x| x != event.player_index),
-                        _ => {}
-                    }
+                match event.team {
+                    Team::Red => red_team.retain(|&x| x != event.player_index),
+                    Team::Blue => blue_team.retain(|&x| x != event.player_index),
+                    _ => {}
                 }
             }
             _ => {}
