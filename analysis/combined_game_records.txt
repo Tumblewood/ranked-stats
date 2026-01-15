@@ -7,16 +7,16 @@
 #### Tags
   Match 3990757: 248
   Match 4032345: 229
-  Match 4039226: 206
-  Match 4042499: 201
-  Match 4054219: 201
+  Match 4136750: 228
+  Match 4143322: 224
+  Match 4143763: 221
 
 #### Returns
   Match 3990757: 206
   Match 4032345: 197
-  Match 4040201: 179
-  Match 4042499: 179
-  Match 4054219: 175
+  Match 4136750: 196
+  Match 4143322: 195
+  Match 4143763: 185
 
 #### Hold (seconds)
   Match 3990757: 2083
@@ -26,19 +26,18 @@
   Match 4013772: 1650
 
 #### Prevent (seconds)
+  Match 4140182: 1281
+  Match 4144622: 1274
   Match 3977701: 1244
-  Match 4099482: 1172
-  Match 3944261: 1088
-  Match 3958120: 1071
-  Match 3948709: 1036
+  Match 4143187: 1196
+  Match 4139065: 1184
 
 #### Quick Returns
+  Match 4143763: 52
+  Match 4141590: 43
+  Match 4141403: 40
+  Match 4141508: 40
   Match 3957395: 39
-  Match 3945549: 37
-  Match 3945882: 36
-  Match 3950664: 36
-  Match 4056873: 36
-  Match 4117727: 36
 
 #### Non-Tag Pops
   Match 3993239: 82
@@ -69,6 +68,9 @@
   Match 4043482: 18
   Match 4103451: 18
   Match 4111134: 18
+  Match 4130317: 18
+  Match 4132316: 18
+  Match 4134493: 18
 
 #### Hold (seconds)
   Match 4099971: 93
@@ -143,48 +145,48 @@
   Match 4114170: 0
   Match 4125122: 0
   Match 4125372: 0
+  Match 4130807: 0
+  Match 4132316: 0
 
 ## FIRST 8 MINUTES RECORDS
 
 ### HIGHS
 
 #### Tags
-  Match 4035595: 132
-  Match 4020377: 131
-  Match 4022202: 130
-  Match 4028295: 130
-  Match 4068976: 130
+  Match 4143831: 159
+  Match 4144372: 157
+  Match 4139227: 154
+  Match 4141536: 154
+  Match 4142310: 154
 
 #### Returns
-  Match 3946448: 117
-  Match 4122477: 111
-  Match 3962986: 108
-  Match 4029299: 108
-  Match 3972427: 107
-  Match 3985935: 107
-  Match 4074433: 107
+  Match 4141590: 151
+  Match 4144339: 148
+  Match 4144195: 147
+  Match 4140935: 144
+  Match 4141937: 144
 
 #### Hold (seconds)
   Match 3954789: 867
+  Match 4132852: 864
   Match 4050712: 863
   Match 3997557: 858
   Match 3946448: 845
-  Match 4117914: 838
 
 #### Prevent (seconds)
-  Match 3941304: 914
-  Match 3963411: 909
-  Match 4009919: 882
-  Match 3942727: 861
-  Match 4063799: 861
+  Match 4139065: 1184
+  Match 4138166: 1129
+  Match 4138471: 1125
+  Match 4143187: 1118
+  Match 4140182: 1113
 
 #### Quick Returns
+  Match 4141590: 43
+  Match 4141403: 40
   Match 3945549: 37
   Match 4056873: 36
   Match 4117727: 36
-  Match 3995909: 35
-  Match 4075639: 35
-  Match 4126316: 35
+  Match 4141883: 36
 
 #### Non-Tag Pops
   Match 3978934: 67
@@ -192,6 +194,7 @@
   Match 3978305: 65
   Match 3953735: 64
   Match 3974675: 64
+  Match 4145001: 64
 
 
 ### LOWS
@@ -214,6 +217,9 @@
   Match 4043482: 18
   Match 4103451: 18
   Match 4111134: 18
+  Match 4130317: 18
+  Match 4132316: 18
+  Match 4134493: 18
 
 #### Hold (seconds)
   Match 4099971: 93
@@ -292,4 +298,7 @@
   Match 4114174: 0
   Match 4125122: 0
   Match 4125372: 0
+  Match 4130807: 0
+  Match 4132316: 0
+  Match 4145194: 0
 

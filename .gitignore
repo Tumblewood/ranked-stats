@@ -1,4 +1,4 @@
 /data
 /target
 *.DS_Store
-*.csv
+analysis/matchups_with_stats.csv

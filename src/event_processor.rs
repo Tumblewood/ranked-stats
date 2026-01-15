@@ -61,18 +61,17 @@ pub fn process_ranked_match<C: StatConfig>(
 
     // Process events in chronological order
     let mut cap_diff: isize = 0;
-    let mut garbage_time_cap_diff: isize = 0;
     let mut red_fc: Option<usize> = None;
     let mut blue_fc: Option<usize> = None;
     let mut red_grab_time: Option<usize> = None;
     let mut blue_grab_time: Option<usize> = None;
-    
+
     for event in relevant_events.iter() {
         // Handle team changes from Join/Quit events first
         match event.event_type {
             Event::Join => {
-                if !red_team.contains(&event.player_index) 
-                    && !blue_team.contains(&event.player_index) 
+                if !red_team.contains(&event.player_index)
+                    && !blue_team.contains(&event.player_index)
                 {
                     match event.team {
                         Team::Red => red_team.push(event.player_index),
@@ -90,12 +89,11 @@ pub fn process_ranked_match<C: StatConfig>(
             }
             _ => {}
         }
-        
+
         // Process the event using the config
         C::process_event(
             event,
             &mut cap_diff,
-            &mut garbage_time_cap_diff,
             match_log.duration,
             &mut red_fc,
             &mut blue_fc,
@@ -121,12 +119,11 @@ pub fn process_ranked_match<C: StatConfig>(
             map_id: match_log.map_id,
             duration: match_log.duration,
             cap_diff,
-            garbage_time_cap_diff,
             red_team,
             blue_team,
             player_stats,
         };
-        
+
         Some((result, player_names))
     } else {
         None
