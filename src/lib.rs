@@ -10,3 +10,6 @@ pub mod analysis_types;
 pub mod event_processor;
 pub mod ranked_analysis;
 pub mod records;
+pub mod grab_analysis;
+pub mod nf_pups;
+pub mod smurfs;

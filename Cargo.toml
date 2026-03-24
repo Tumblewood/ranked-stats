@@ -30,3 +30,15 @@ path = "src/bin/collect_team_records.rs"
 [[bin]]
 name = "collect-cap-runs-and-comebacks"
 path = "src/bin/collect_cap_runs_and_comebacks.rs"
+
+[[bin]]
+name = "grab-stats"
+path = "src/bin/grab_stats.rs"
+
+[[bin]]
+name = "nf-pups"
+path = "src/bin/nf_pups.rs"
+
+[[bin]]
+name = "smurfs"
+path = "src/bin/smurfs.rs"

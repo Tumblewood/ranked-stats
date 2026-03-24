@@ -16,9 +16,8 @@ pub struct RankedPlayerStats {
     pub nrts: usize,
     pub pups: usize,
     pub handoffs: usize,
-    pub prevent_start: Option<usize>,
-    pub prevent: usize,
-    pub lateprevent: usize,
+    pub cap_handoffs: usize,
+    pub handoffs_received: usize,
 }
 
 pub struct RankedStatConfig;
@@ -35,14 +34,12 @@ impl StatConfig for RankedStatConfig {
         Event::Pop,
         Event::Powerup,
         Event::DuplicatePowerup,
-        Event::StartPrevent,
-        Event::StopPrevent,
         Event::Quit,
     ];
     
     const STAT_FIELDS: &'static [&'static str] = &[
         "caps", "hold", "earlyhold", "latehold", "ndps", "returns", "quick_returns", "nrts", "pups",
-        "handoffs", "prevent", "lateprevent"
+        "handoffs", "cap_handoffs", "handoffs_received"
     ];
     
     fn process_event(
@@ -160,25 +157,6 @@ impl StatConfig for RankedStatConfig {
             Event::Powerup | Event::DuplicatePowerup => {
                 stats.pups += 1;
             }
-            Event::StartPrevent => {
-                stats.prevent_start = Some(event.time);
-            }
-            Event::StopPrevent => {
-                match stats.prevent_start {
-                    Some(prevent_start) => {
-                        let prevent_time = event.time - prevent_start;
-                        stats.prevent += prevent_time;
-
-                        // lateprevent: only count time after 10th second (600 ticks)
-                        if prevent_time > 600 {
-                            stats.lateprevent += prevent_time - 600;
-                        }
-
-                        stats.prevent_start = None;
-                    }
-                    None => {} // this shouldn't happen
-                }
-            }
             Event::Quit => {
                 // Handle ongoing hold when player quits
                 match stats.hold_start {
@@ -210,28 +188,24 @@ impl StatConfig for RankedStatConfig {
         _red_team: &[usize],
         _blue_team: &[usize],
     ) {
-        // Process handoffs (drops where teammate grabs within 1 second and caps or holds 5+ seconds)
+        // handoffs (original): drop → teammate grabs within 1s → teammate caps or holds 5+ seconds
         for i in 0..all_events.len() {
             if let Event::Drop = all_events[i].event_type {
                 let drop_time = all_events[i].time;
                 let drop_team = all_events[i].team;
                 let drop_player = all_events[i].player_index;
 
-                // Look ahead 1 second for grabs by teammates
                 for j in (i + 1)..all_events.len() {
-                    if all_events[j].time > drop_time + 60 { // 1 second = 60 ticks
+                    if all_events[j].time > drop_time + 60 {
                         break;
                     }
                     if let Event::Grab = all_events[j].event_type {
                         let grab_team = all_events[j].team;
                         let grab_player = all_events[j].player_index;
 
-                        // Check if grab was by teammate (same team, different player)
                         if grab_team == drop_team && grab_player != drop_player {
-                            // Check if this grab leads to cap or 5+ second hold
                             let mut found_handoff = false;
 
-                            // Look for cap by this player
                             for k in (j + 1)..all_events.len() {
                                 if let Event::Capture = all_events[k].event_type {
                                     if all_events[k].player_index == grab_player {
@@ -239,12 +213,10 @@ impl StatConfig for RankedStatConfig {
                                         break;
                                     }
                                 }
-                                // If someone else grabs or caps, this hold ended
                                 if matches!(all_events[k].event_type, Event::Grab | Event::Capture) {
                                     break;
                                 }
-                                // Check for 5+ second hold
-                                if all_events[k].time >= all_events[j].time + 5 * 60 { // 5 seconds
+                                if all_events[k].time >= all_events[j].time + 300 {
                                     if let Event::Drop = all_events[k].event_type {
                                         if all_events[k].player_index == grab_player {
                                             found_handoff = true;
@@ -256,11 +228,47 @@ impl StatConfig for RankedStatConfig {
 
                             if found_handoff {
                                 all_player_stats[drop_player].handoffs += 1;
+                                all_player_stats[grab_player].handoffs_received += 1;
                             }
-                            break; // Only count first teammate grab
+                            break;
                         }
                     }
                 }
+            }
+        }
+
+        // cap_handoffs: drop → cap by teammate within 2 seconds (120 ticks).
+        // Single forward pass: track the most recent drop per team.
+        let mut red_drop: Option<(usize, usize)> = None; // (player_index, drop_time)
+        let mut blue_drop: Option<(usize, usize)> = None;
+
+        for event in all_events {
+            match event.event_type {
+                Event::Drop => match event.team {
+                    Team::Red => red_drop = Some((event.player_index, event.time)),
+                    Team::Blue => blue_drop = Some((event.player_index, event.time)),
+                    _ => {}
+                },
+                Event::Capture => {
+                    let pending = match event.team {
+                        Team::Red => &mut red_drop,
+                        Team::Blue => &mut blue_drop,
+                        _ => continue,
+                    };
+                    if let Some((drop_player, drop_time)) = *pending {
+                        if drop_player != event.player_index && event.time <= drop_time + 120 {
+                            all_player_stats[drop_player].cap_handoffs += 1;
+                        }
+                    }
+                    *pending = None;
+                }
+                // Flag returned to base — no longer a live drop for the team that had it
+                Event::Return => match event.team {
+                    Team::Red => blue_drop = None,
+                    Team::Blue => red_drop = None,
+                    _ => {}
+                },
+                _ => {}
             }
         }
     }
@@ -277,8 +285,8 @@ impl StatConfig for RankedStatConfig {
             stats.nrts.to_string(),
             stats.pups.to_string(),
             stats.handoffs.to_string(),
-            stats.prevent.to_string(),
-            stats.lateprevent.to_string(),
+            stats.cap_handoffs.to_string(),
+            stats.handoffs_received.to_string(),
         ]
     }
 }

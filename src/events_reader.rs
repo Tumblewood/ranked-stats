@@ -2,7 +2,7 @@ use num_derive::{FromPrimitive, ToPrimitive};
 use num_traits::FromPrimitive;
 use base64::Engine;
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug, FromPrimitive)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash, FromPrimitive)]
 pub enum Team {
     None = 0,
     Red = 1,
@@ -109,6 +109,7 @@ pub struct EventsReader {
 }
 
 #[allow(dead_code)]
+#[derive(Clone)]
 pub struct MapLayout {
     pub layout: Vec<MapTile>,
     pub width: usize,
@@ -137,7 +138,7 @@ impl EventsReader {
         }
     }
 
-    fn events_remaining(&self) -> bool {
+    pub fn events_remaining(&self) -> bool {
         (self.pos >> 3) < self.data.len()
     }
 
@@ -152,7 +153,7 @@ impl EventsReader {
         }
     }
 
-    fn read_fixed(&mut self, num_bits: usize) -> usize {
+    pub fn read_fixed(&mut self, num_bits: usize) -> usize {
         let mut result = 0;
         for _ in 0..num_bits {
             result = result << 1 | (self.read_bool() as usize);
@@ -160,7 +161,7 @@ impl EventsReader {
         result
     }
 
-    fn read_tally(&mut self) -> usize {
+    pub fn read_tally(&mut self) -> usize {
         let mut result = 0;
         while self.read_bool() {
             result += 1;
@@ -338,7 +339,7 @@ impl EventsReader {
                 n if n < 20 => n * 10 - 70,
                 n if n < 22 => n + 110,
                 n => n * 10 - 80
-            }).unwrap();
+            }).unwrap_or(MapTile::Empty);
 
             for _ in 0..self.read_footer() + 1 {
                 layout.push(tile);
@@ -353,27 +354,35 @@ impl EventsReader {
         }
     }
 
-    fn bits_used_to_represent_coordinate(&self, num_tiles: usize) -> (usize, usize) {
-        let highest_pixel_coordinate = 40 * num_tiles - 1;
-        let mut bits_used: usize = 32;
-        if highest_pixel_coordinate & 0xFFFF0000 == 0 {
-            bits_used -= 16;
+    pub fn bits_used_to_represent_coordinate(&self, num_tiles: usize) -> (usize, usize) {
+        let size = 40 * num_tiles;
+        let mut grid = size - 1;
+        let mut result: usize = 32;
+
+        // Match the PHP/Python implementation: shift grid left as we check bits
+        if grid & 0xFFFF0000 == 0 {
+            result -= 16;
+            grid <<= 16;
         }
-        if highest_pixel_coordinate & 0x0000FF00 == 0 {
-            bits_used -= 8;
+        if grid & 0xFF000000 == 0 {
+            result -= 8;
+            grid <<= 8;
         }
-        if highest_pixel_coordinate & 0x000000F0 == 0 {
-            bits_used -= 4;
+        if grid & 0xF0000000 == 0 {
+            result -= 4;
+            grid <<= 4;
         }
-        if highest_pixel_coordinate & 0x0000000C == 0 {
-            bits_used -= 2;
+        if grid & 0xC0000000 == 0 {
+            result -= 2;
+            grid <<= 2;
         }
-        if highest_pixel_coordinate & 0x00000002 == 0 {
-            bits_used -= 1;
+        if grid & 0x80000000 == 0 {
+            result -= 1;
         }
 
-        let unused_space = ((1 << bits_used) - 40 * (num_tiles - 1)) / 2;
-        (bits_used, unused_space)
+        // PHP: ((1 << $result) - $size >> 1) + 20
+        let offset = (((1 << result) - size) / 2) + 20;
+        (result, offset)
     }
 
     pub fn splat_events(&mut self, map_layout: MapLayout) -> Vec<SplatEvent> {
@@ -385,11 +394,16 @@ impl EventsReader {
         while self.events_remaining() {
             time += 1;
             for _ in 0..self.read_tally() {
-                splats.push(SplatEvent {
-                    x: self.read_fixed(x_bits.0) - x_bits.1,
-                    y: self.read_fixed(y_bits.0) - y_bits.1,
-                    time
-                })
+                // Use signed arithmetic to handle potential underflow in coordinate calculation
+                let x_raw = self.read_fixed(x_bits.0) as isize;
+                let y_raw = self.read_fixed(y_bits.0) as isize;
+                let x_offset = x_bits.1 as isize;
+                let y_offset = y_bits.1 as isize;
+
+                let x = (x_raw - x_offset).max(0) as usize;
+                let y = (y_raw - y_offset).max(0) as usize;
+
+                splats.push(SplatEvent { x, y, time })
             }
         }
         splats
